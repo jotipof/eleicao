@@ -5,6 +5,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); /
 
 // Função para buscar os dados
 async function buscarVotos() {
+    console.log("Buscando dados da tabela 'votos'");
     const { data, error } = await supabaseClient
         .from('votos')
         .select('*');
@@ -17,6 +18,7 @@ async function buscarVotos() {
     console.log("Dados recebidos do Supabase:", data);
     atualizarGrafico(data);
 }
+
 
 // Função para atualizar o gráfico
 function atualizarGrafico(votosData) {
