@@ -1,4 +1,4 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/esm/index.js';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/dist/umd/supabase.js';
 
 // Inicialização do Supabase
 const SUPABASE_URL = "https://rbeujdwjajzrlpnbrbaf.supabase.co"; // substitua pelo valor correto
