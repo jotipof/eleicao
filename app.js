@@ -1,11 +1,11 @@
-// Configuração do Supabase
-const SUPABASE_URL = "https://rbeujdwjajzrlpnbrbaf.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiZXVqZHdqYWp6cmxwbmJyYmFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA1NDA3NzIsImV4cCI6MjA0NjExNjc3Mn0.QqQS6-QjP6QCsMuMeHOj28UbWu6We0vbzYr9g8AMrn8";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Inicialização do Supabase
+const SUPABASE_URL = "https://rbeujdwjajzrlpnbrbaf.supabase.co"; // substitua pelo valor correto
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiZXVqZHdqYWp6cmxwbmJyYmFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA1NDA3NzIsImV4cCI6MjA0NjExNjc3Mn0.QqQS6-QjP6QCsMuMeHOj28UbWu6We0vbzYr9g8AMrn8"; // substitua pelo valor correto
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); // Renomeado para evitar conflito
 
-// Buscar e atualizar os dados
+// Função para buscar os dados
 async function buscarVotos() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('votos')
         .select('*');
     
@@ -14,47 +14,39 @@ async function buscarVotos() {
         return;
     }
     
-    // Atualizar gráfico com os dados recebidos
+    console.log("Dados recebidos do Supabase:", data);
     atualizarGrafico(data);
 }
 
-// Configurar o gráfico com Chart.js
-const ctx = document.getElementById('chartVotos').getContext('2d');
-let chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: [],
-        datasets: [{
-            label: 'Votos',
-            data: [],
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        scales: {
-            y: { beginAtZero: true }
-        }
-    }
-});
-
+// Função para atualizar o gráfico
 function atualizarGrafico(votosData) {
     const labels = votosData.map(entry => entry.candidato);
     const data = votosData.map(entry => entry.votos);
-    chart.data.labels = labels;
-    chart.data.datasets[0].data = data;
-    chart.update();
+
+    const ctx = document.getElementById('chartVotos').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar', // ou 'line', dependendo do tipo de gráfico que deseja
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Votos',
+                data: data,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
 }
 
-// Configurar o canal de atualizações em tempo real
-supabase
-  .from('votos')
-  .on('UPDATE', payload => {
-      console.log("Atualização recebida:", payload.new);
-      buscarVotos(); // Recarrega os dados e atualiza o gráfico
-  })
-  .subscribe();
-
-// Buscar os dados iniciais ao carregar a página
-buscarVotos();
+// Aguardando o carregamento do DOM
+document.addEventListener("DOMContentLoaded", () => {
+    buscarVotos(); // Chama a função para buscar os dados
+});
