@@ -17,10 +17,12 @@ function atualizarGraficoVotos(votosData) {
 
     // Criação ou atualização do gráfico de votos
     if (window.chartVotos) {
+        // Verifica se o gráfico já foi criado
         window.chartVotos.data.labels = labels;
         window.chartVotos.data.datasets[0].data = data;
         window.chartVotos.update(); // Atualiza o gráfico existente
     } else {
+        // Cria o gráfico pela primeira vez
         window.chartVotos = new Chart(ctx, {
             type: 'pie', // Gráfico circular
             data: {
@@ -133,7 +135,12 @@ async function getMandatosData() {
         .select('partido, mandatos');
 
     if (error) {
-        console.error(error);
+        console.error("Erro ao buscar mandatos:", error);
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        console.log("Nenhum dado de mandatos encontrado.");
         return;
     }
 
