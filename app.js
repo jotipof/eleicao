@@ -18,9 +18,13 @@ function atualizarGraficoVotos(votosData) {
     // Criação ou atualização do gráfico de votos
     if (window.chartVotos) {
         // Verifica se o gráfico já foi criado
-        window.chartVotos.data.labels = labels;
-        window.chartVotos.data.datasets[0].data = data;
-        window.chartVotos.update(); // Atualiza o gráfico existente
+        if (window.chartVotos.data) {
+            window.chartVotos.data.labels = labels;
+            window.chartVotos.data.datasets[0].data = data;
+            window.chartVotos.update(); // Atualiza o gráfico existente
+        } else {
+            console.error("O gráfico não foi inicializado corretamente.");
+        }
     } else {
         // Cria o gráfico pela primeira vez
         window.chartVotos = new Chart(ctx, {
