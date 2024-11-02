@@ -24,25 +24,84 @@ function atualizarGrafico(votosData) {
         window.chart.update(); // Atualiza o gráfico existente
     } else {
         window.chart = new Chart(ctx, {
-            type: 'bar', // ou 'line', dependendo do tipo de gráfico que deseja
+            type: 'pie', // Alterado para 'pie' para gráfico circular
             data: {
                 labels: labels,
                 datasets: [{
                     label: 'Votos',
                     data: data,
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        // Adicione mais cores conforme necessário
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        // Adicione mais cores conforme necessário
+                    ],
                     borderWidth: 1
                 }]
             },
             options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.label + ': ' + tooltipItem.raw + ' votos';
+                            }
+                        }
                     }
                 }
             }
         });
+    }
+}
+
+function calcularMandatos(votosData, totalMandatos) {
+    const quocientes = [];
+    
+    // Cria uma lista de quocientes para cada candidato
+    votosData.forEach(entry => {
+        for (let i = 1; i <= totalMandatos; i++) {
+            quocientes.push({ candidato: entry.candidato, quociente: entry.votos / i });
+        }
+    });
+
+    // Ordena os quocientes em ordem decrescente
+    quocientes.sort((a, b) => b.quociente - a.quociente);
+
+    // Seleciona os mandatos
+    const mandatos = {};
+    for (let i = 0; i < totalMandatos; i++) {
+        const candidato = quocientes[i].candidato;
+        if (!mandatos[candidato]) {
+            mandatos[candidato] = 0;
+        }
+        mandatos[candidato]++;
+    }
+
+    return mandatos;
+}
+
+function preencherMandatos(mandatos) {
+    const container = document.getElementById('mandatosContainer');
+    container.innerHTML = ''; // Limpa o conteúdo anterior
+
+    // Itera sobre os mandatos e cria elementos para cada um
+    for (const candidato in mandatos) {
+        const quantidade = mandatos[candidato];
+
+        for (let i = 0; i < quantidade; i++) {
+            const mandatoDiv = document.createElement('div');
+            mandatoDiv.className = 'mandato';
+            mandatoDiv.style.backgroundColor = candidato === 'Candidato A' ? 'rgba(75, 192, 192, 1)' : 'rgba(255, 99, 132, 1)'; // Altere as cores conforme necessário
+            container.appendChild(mandatoDiv);
+        }
     }
 }
 
@@ -52,14 +111,21 @@ async function buscarVotos() {
     const { data, error } = await supabaseClient
         .from('votos')
         .select('*');
-    
+
     if (error) {
         console.error("Erro ao buscar dados:", error);
         return;
     }
-    
+
     console.log("Dados recebidos do Supabase:", data);
     atualizarGrafico(data);
+
+    // Calcular mandatos
+    const totalMandatos = 10; // Substitua pelo número total de mandatos
+    const mandatos = calcularMandatos(data, totalMandatos);
+
+    // Preencher os mandatos no HTML
+    preencherMandatos(mandatos);
 }
 
 // Assinatura para escutar mudanças na tabela

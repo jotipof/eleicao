@@ -1,0 +1,8 @@
+.mandato {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%; /* Faz com que os lugares sejam circulares */
+    margin: 5px;
+    display: inline-block;
+    position: relative;
+}
