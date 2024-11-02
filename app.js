@@ -20,6 +20,11 @@ async function buscarVotos() {
 
 // Função para atualizar o gráfico
 function atualizarGrafico(votosData) {
+    if (!votosData || votosData.length === 0) {
+        console.log("Nenhum dado para exibir");
+        return; // Se não houver dados, não prosseguir
+    }
+
     const labels = votosData.map(entry => entry.candidato);
     const data = votosData.map(entry => entry.votos);
 
@@ -45,6 +50,7 @@ function atualizarGrafico(votosData) {
         }
     });
 }
+
 
 // Aguardando o carregamento do DOM
 document.addEventListener("DOMContentLoaded", () => {
