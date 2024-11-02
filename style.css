@@ -6,3 +6,8 @@
     display: inline-block;
     position: relative;
 }
+
+#chartVotos {
+    max-width: 600px; /* Defina uma largura máxima */
+    margin: auto; /* Centraliza o gráfico na página */
+}

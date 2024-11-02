@@ -22,7 +22,7 @@ function atualizarGrafico(votosData) {
         window.chart.update(); // Atualiza o gráfico existente
     } else {
         window.chart = new Chart(ctx, {
-            type: 'pie', // Alterado para 'pie' para gráfico circular
+            type: 'doughnut', // Altere para 'doughnut' para gráfico de rosca
             data: {
                 labels: labels,
                 datasets: [{
