@@ -3,8 +3,8 @@ const SUPABASE_URL = "https://rbeujdwjajzrlpnbrbaf.supabase.co"; // substitua pe
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiZXVqZHdqYWp6cmxwbmJyYmFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA1NDA3NzIsImV4cCI6MjA0NjExNjc3Mn0.QqQS6-QjP6QCsMuMeHOj28UbWu6We0vbzYr9g8AMrn8"; // substitua pelo valor correto
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); // Inicialize o cliente Supabase
 
-// Função para atualizar o gráfico
-function atualizarGrafico(votosData) {
+// Função para atualizar o gráfico de votos
+function atualizarGraficoVotos(votosData) {
     if (!votosData || votosData.length === 0) {
         console.log("Nenhum dado para exibir");
         return;
@@ -15,14 +15,14 @@ function atualizarGrafico(votosData) {
 
     const ctx = document.getElementById('chartVotos').getContext('2d');
 
-    // Criação ou atualização do gráfico
-    if (window.chart) {
-        window.chart.data.labels = labels;
-        window.chart.data.datasets[0].data = data;
-        window.chart.update(); // Atualiza o gráfico existente
+    // Criação ou atualização do gráfico de votos
+    if (window.chartVotos) {
+        window.chartVotos.data.labels = labels;
+        window.chartVotos.data.datasets[0].data = data;
+        window.chartVotos.update(); // Atualiza o gráfico existente
     } else {
-        window.chart = new Chart(ctx, {
-            type: 'doughnut', // Altere para 'doughnut' para gráfico de rosca
+        window.chartVotos = new Chart(ctx, {
+            type: 'pie', // Gráfico circular
             data: {
                 labels: labels,
                 datasets: [{
@@ -60,75 +60,91 @@ function atualizarGrafico(votosData) {
     }
 }
 
-// Função para calcular mandatos
-function calcularMandatos(votosData, totalMandatos) {
-    const quocientes = [];
-    
-    // Cria uma lista de quocientes para cada candidato
-    votosData.forEach(entry => {
-        for (let i = 1; i <= totalMandatos; i++) {
-            quocientes.push({ candidato: entry.candidato, quociente: entry.votos / i });
-        }
-    });
+// Função para atualizar o gráfico de mandatos (semicircular)
+function atualizarGraficoMandatos(mandatos) {
+    const labels = Object.keys(mandatos);
+    const data = Object.values(mandatos);
 
-    // Ordena os quocientes em ordem decrescente
-    quocientes.sort((a, b) => b.quociente - a.quociente);
+    const ctx = document.getElementById('chartMandatos').getContext('2d');
 
-    // Seleciona os mandatos
-    const mandatos = {};
-    for (let i = 0; i < totalMandatos; i++) {
-        const candidato = quocientes[i].candidato;
-        if (!mandatos[candidato]) {
-            mandatos[candidato] = 0;
-        }
-        mandatos[candidato]++;
+    // Criação ou atualização do gráfico de mandatos
+    if (window.chartMandatos) {
+        window.chartMandatos.data.labels = labels;
+        window.chartMandatos.data.datasets[0].data = data;
+        window.chartMandatos.update(); // Atualiza o gráfico existente
+    } else {
+        window.chartMandatos = new Chart(ctx, {
+            type: 'doughnut', // Gráfico de rosca
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Mandatos',
+                    data: data,
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        // Adicione mais cores conforme necessário
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        // Adicione mais cores conforme necessário
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '50%', // Corte para criar um semicirculo
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.label + ': ' + tooltipItem.raw + ' mandatos';
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
-
-    return mandatos;
 }
 
-// Função para preencher mandatos no HTML
-function preencherMandatos(mandatos) {
-    const container = document.getElementById('mandatosContainer');
-    container.innerHTML = ''; // Limpa o conteúdo anterior
-
-    // Itera sobre os mandatos e cria elementos para cada um
-    for (const candidato in mandatos) {
-        const quantidade = mandatos[candidato];
-
-        for (let i = 0; i < quantidade; i++) {
-            const mandatoDiv = document.createElement('div');
-            mandatoDiv.className = 'mandato';
-            mandatoDiv.style.backgroundColor = candidato === 'Candidato A' ? 'rgba(75, 192, 192, 1)' : 'rgba(255, 99, 132, 1)'; // Altere as cores conforme necessário
-            container.appendChild(mandatoDiv);
-        }
-    }
-}
-
-// Função para buscar os dados inicialmente
-async function buscarVotos() {
-    console.log("Buscando dados da tabela 'votos'");
+// Função para obter os dados do Supabase
+async function getVotosData() {
     const { data, error } = await supabaseClient
         .from('votos')
-        .select('*');
+        .select('candidato, votos');
 
     if (error) {
- console.error("Erro ao buscar dados:", error);
+        console.error(error);
         return;
     }
 
-    console.log("Dados recebidos do Supabase:", data);
-    atualizarGrafico(data);
-
-    // Calcular mandatos
-    const totalMandatos = 10; // Substitua pelo número total de mandatos
-    const mandatos = calcularMandatos(data, totalMandatos);
-
-    // Preencher os mandatos no HTML
-    preencherMandatos(mandatos);
+    atualizarGraficoVotos(data);
 }
 
-// Aguardando o carregamento do DOM
-document.addEventListener("DOMContentLoaded", () => {
-    buscarVotos(); // Chama a função para buscar os dados inicialmente
-});
+async function getMandatosData() {
+    const { data, error } = await supabaseClient
+        .from('mandatos')
+        .select('partido, mandatos');
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    const mandatos = data.reduce((acc, current) => {
+        acc[current.partido] = current.mandatos;
+        return acc;
+    }, {});
+
+    atualizarGraficoMandatos(mandatos);
+}
+
+// Chamada inicial para obter os dados
+getVotosData();
+getMandatosData();
