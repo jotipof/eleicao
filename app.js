@@ -61,19 +61,11 @@ async function buscarVotos() {
 }
 
 // Assinatura para escutar mudanças na tabela
-supabaseClient
+const votosSubscription = supabaseClient
     .from('votos')
-    .on('INSERT', payload => {
-        console.log('Novo voto inserido:', payload);
-        buscarVotos(); // Rebusca os dados após a inserção
-    })
-    .on('UPDATE', payload => {
-        console.log('Voto atualizado:', payload);
-        buscarVotos(); // Rebusca os dados após a atualização
-    })
-    .on('DELETE', payload => {
-        console.log('Voto removido:', payload);
-        buscarVotos(); // Rebusca os dados após a remoção
+    .on('*', payload => {
+        console.log('Alteração detectada:', payload);
+        buscarVotos(); // Rebusca os dados após qualquer alteração
     })
     .subscribe();
 
